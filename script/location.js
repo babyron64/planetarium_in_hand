@@ -34,7 +34,3 @@ function initLocation() {
     navigator.geolocation.getCurrentPosition(handlePosition);
     navigator.geolocation.watchPosition(handlePosition);
 }
-
-function debugOnWindow(msg, num) {
-    document.getElementById("debug"+num.toString()).innerHTML = msg;
-}
