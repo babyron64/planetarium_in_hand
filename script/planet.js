@@ -23,7 +23,7 @@ function Planetarium(gl) {
     }
 }
 
-function plInitScreen(pl, configs) {
+async function plInitScreen(pl, configs) {
     if (!pl.screen) {
         throw new Error("screen menber of planetarium instance is undefined.");
     }
@@ -35,10 +35,9 @@ function plInitScreen(pl, configs) {
 
     // The variable shaders passed below is like:
     // { tag(specified in coinfigs): shader(created) }
-    return loadShaderFiles(gl, configs).then(function (shaders) {
-      pl.shaders = shaders;
-      pl.onInit(pl);
-    });
+    const shaders = await loadShaderFiles(gl, configs);
+    pl.shaders = shaders;
+    pl.onInit(pl);
 }
 
 function plAttachShaders(pl, tags) {

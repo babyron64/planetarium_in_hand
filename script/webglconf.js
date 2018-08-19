@@ -4,24 +4,19 @@
  * fds is of type:
  * [ { tag: string, url: string, type: (gl shader type) } ]
  */
-function loadShaderFiles(gl, fds) {
-    const fetches = fds.map(e => 
-        loadFile(e.url).then(source => 
+async function loadShaderFiles(gl, fds) {
+    // not using await due to performance enhancement
+    const fetches = fds.map(e =>  
+        loadFileText(e.url).then(source =>
             ({ tag: e.tag, shader: loadShader(gl, e.type, source) })
         )
     );
 
-    return Promise.all(fetches).then(pairs => {
-        var shaders = {};
-        pairs.forEach(e => shaders[e.tag] = e.shader);
-        return shaders;
-    });
-}
+    const pairs = await Promise.all(fetches);
 
-function loadFile(fileurl) {
-    return fetch(fileurl).then(function(response) {
-        return response.text();
-    });
+    var shaders = {};
+    pairs.forEach(e => shaders[e.tag] = e.shader);
+    return shaders;
 }
 
 function loadShader(gl, type, source) {
