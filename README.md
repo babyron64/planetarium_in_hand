@@ -4,7 +4,7 @@ Look at the stars on web which you would see looking over the sky.
 # requirement
 This app must be hosted on the server with ssl support in order to use GPS information inside.
 
-# debug environment notion
+# debug environment caution
 When you run the app on local environment for debug purpose and use self-signed certificate, you should not ignore a browser waring such as untrusted certificate. Which may make some features not to work, including app-icon on iphone as far as I have noticed.
 
 When use self-signed certificate, make sure the following things for appropreate work:
