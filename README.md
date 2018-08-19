@@ -15,12 +15,12 @@ When use self-signed certificate, make sure the following things for appropreate
 (for chrome)
 - Your certificate include SubjectAltNames extension with your common name, even if CN is configured.
 
-(for firefox)
+(for Firefox)
 - Your server certificate (which is sent with a respond to the client) is not self-signed
 - but your root certificate is self-signed. In other words, your certificate has 2 or higher hierarchy.
 - Your root certificate's version is not 1.
 - about:config/security.enterprise_roots.enabled is true.
-- Your domain is not ended with dev, which results in HSTS ([wikipedia](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=2ahUKEwih3IedsfncAhUR6bwKHa7zBY4QFjAAegQIBhAB&url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FHTTP_Strict_Transport_Security&usg=AOvVaw1fchZaueG6yXEG2yoTKmy1)).
+- Your top level domain is not dev, which results in HSTS ([wikipedia](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=2ahUKEwih3IedsfncAhUR6bwKHa7zBY4QFjAAegQIBhAB&url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FHTTP_Strict_Transport_Security&usg=AOvVaw1fchZaueG6yXEG2yoTKmy1)). For example, example.dev and www.example.dev is not allowed.
 
 (for iOS)
 - Your root certificate's CN is not empty.
