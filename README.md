@@ -2,7 +2,15 @@
 Look at the stars on web which you would see looking over the sky.
 
 # requirement
-This app must be hosted on the server with ssl support in order to use GPS information inside.
+- imagemagick is needed (make sure you can execute `convert` command).
+- This app must be hosted on the server with ssl support in order to use GPS information inside.
+
+# installation
+Before run the app on server, execute
+```
+make
+```
+This generates icons and splash images in some sizes needed to show them properly on different devices.
 
 # debug environment caution
 When you run the app on local environment for debug purpose and use self-signed certificate, you should not ignore a browser waring such as untrusted certificate. Which may make some features not to work, including app-icon on iphone as far as I have noticed.
