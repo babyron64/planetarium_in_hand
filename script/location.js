@@ -1,6 +1,4 @@
-window.addEventListener("deviceorientation", handleOrientation, true);
-
-function handleOrientation(orientation) {
+function debugOrientation(orientation) {
     var absolute = orientation.absolute; // inavailable on safari
     if (absolute == false) {
         return;
@@ -18,7 +16,7 @@ function handleOrientation(orientation) {
                 gamma.toString(), 1);
 }
 
-function handlePosition(position) {
+function debugPosition(position) {
     var latitude = position.coords.latitude;
     var longitude = position.coords.longitude;
 
@@ -26,11 +24,17 @@ function handlePosition(position) {
                 longitude.toString(), 2);
 }
 
-function initLocation() {
+function initLocation(pl) {
     if (!navigator.geolocation) {
-        alert("GPS infomation isn't available.");
-        return false;
+        throw new Error("GPS information isn't available.");
     }
-    navigator.geolocation.getCurrentPosition(handlePosition);
-    navigator.geolocation.watchPosition(handlePosition);
+
+    if (pl.changePosition) {
+        navigator.geolocation.getCurrentPosition(pl.changePosition);
+        navigator.geolocation.watchPosition(pl.changePosition);
+    }
+
+    if (pl.changeOrientation) {
+        window.addEventListener("deviceorientation", pl.changeOrientation, true);
+    }
 }
