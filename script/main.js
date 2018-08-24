@@ -2,11 +2,26 @@
 // global variables
 //
 var plContainer;
+var manager;
 
 window.onload = async function() {
     //
     // Initialization
     //
+
+    // disable auto scroll that restores the previous state.
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    };
+
+    // disable scroll by default
+    document.addEventListener("touchmove", e => {
+        e.preventDefault();
+    }, {passive: false});
+    document.addEventListener("wheel", e => {
+        e.preventDefault();
+    });
+
     const screen = document.querySelector("#plScreen");
     const gl = screen.getContext("webgl");
     if (gl === null) {
@@ -20,13 +35,40 @@ window.onload = async function() {
     plContainer = new DIContainer();
     plContainer.add("pl", pl);
 
+    manager = new FrameManager();
+
     initConfig(pl);
     initLocation(pl);
     initUI();
 
     enterProgress();
 
-    // await loadSettingPane();
+    const main = document.querySelector("#main_pane");
+    const main_frame = manager.createFrame(main);
+    await manager.register(main_frame, "main");
+
+    const setting = await loadSettingPane();
+    const setting_frame = manager.createFrame(setting);
+    const _setting_enter = setting_frame.enter;
+    // change style when entered
+    // const setting_style = setting.querySelector("link");
+    // setting_frame.enter = async function (element) {
+    //     if (!element.contains(setting_style))
+    //         element.appendChild(setting_style);
+    //     return await _setting_enter(element);
+    // };
+    // const _setting_exit = setting_frame.exit;
+    // setting_frame.exit = async function (element) {
+    //     if (element.contains(setting_style))
+    //         setting_style.remove();
+    //     return await _setting_exit(element);
+    // };
+    setting_frame.onenable = settingPaneOnEnable;
+    setting_frame.ondisable = settingPaneOnDisable;
+    await manager.register(setting_frame, "setting");
+
+    FrameManager.trans.slideFromBottom(manager, "main", "setting");
+    FrameManager.trans.buttonClick(manager, "setting", "main", "#ok_button");
 
     var shader_confs = [
         { tag: "vshader", url: "/shader/vshader.vert", type: gl.VERTEX_SHADER },
@@ -34,6 +76,8 @@ window.onload = async function() {
     ];
     await initScreen(pl, shader_confs);
     await plLoadData(pl);
+
+    manager.show("main");
 
     exitProgress();
 
