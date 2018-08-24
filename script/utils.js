@@ -53,13 +53,13 @@ function toPx(pos) {
     var x = pos.x;
     var y = pos.y;
     
-    if (top)
+    if (top || top == 0)
         top = top + 'px';
-    if (left)
+    if (left || left == 0)
         left = left + 'px';
-    if (x)
+    if (x || x == 0)
         x = x + 'px';
-    if (y)
+    if (y || y == 0)
         y = y + 'px';
 
     return {
