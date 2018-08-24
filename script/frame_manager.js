@@ -5,18 +5,17 @@
  * REQUIREMENT
  * -----------
  *  - The element position parameter is absolute.
- *  - enter, exit, resume, suspend and trans functions returns true when succeded and
- *   return false when failed.
- *  - enter, exit, resume, suspend functions are idenponent and inversive. See below
- *   for more details.
+ *  - enter, exit, resume, suspend functions are idenponent and inversive.
  * 
  * ----------------------
  * PRIMARY FUNCTIONS LIST
  * ----------------------
  *  - FrameManager FrameManager([parent: element = document.body])
  *      The constructor.
- *  - frame register(element: element, tag: string [, enter: * [, exit: * [, resume: * [, suspend: *]]]])
- *      Register an element to be used as a frame.
+ *  - frame createFrame(element: element [, enter: * [, exit: * [, resume: * [, suspend: *]]]])
+ *      Create new frame.
+ *  - async bool register(frame: frame, tag: string)
+ *      Register a frame.
  *  - async bool trans(tag: string, [data: object [, trans: * [, x: int [, y: int]]]])
  *      Replace the top frame with another. Existing one is deleted.
  *  - async bool show(tag: string, [data: object [, trans: * [, x: int [, y: int]]]])
@@ -29,9 +28,9 @@
  * ----------------------------
  * ARGUMENT FUNCTION SIGNATURES
  * ----------------------------
- *  - async bool enter(element: element [, data: object)
+ *  - async element enter(element: element [, data: object)
  *  - async bool exit(element: element)
- *  - async bool resume(element: element)
+ *  - async element resume(element: element)
  *  - async bool suspend(element: element)
  *  - async bool trans(prev_frame: frame, current_frame: frame [, data: object])
  * 
@@ -56,41 +55,6 @@
  * 
  *  *: see 'ARGUMENT FUNCTION SIGNATURES' section
  *  **: see 'EVENT HANDLERS' section
- * 
- * -----------
- * DESCRIPTION
- * ----------- 
- *  1. Create an instance of FrameManager Class. The argument of the constructor
- *    is the element that is to a parent of all the frame element you register.
- *     The element position parameter must be absolute.
- *  2. Register the element and a tag associated with it through register function. When you
- *    specify a frame later, you use the tag instead of the element. When you register an element,
- *    you can provide your own functions to enter, exit from, resume, suspend the element.
- *    These function must return true when succeeded, and return false when failed. And when
- *    return false, all the changed you made to the element must be restored before return.
- *     They must be idempontent. Furthermore, the pair of enter and exit, and resume and
- *    suspend must be inversive at least just after they are called. That is, when you enter
- *    a frame and exit from it immediately, there must leaves no effect. And the same is
- *    applied to resume and suspend functions.
- *     In enter, exit, resume and suspend functions, you must not modify the z-index of the element.
- *     By default, enter and exit work by changing display parameter, and resume and suspend
- *    do not do anything.
- *     As described above, all the element must be siblings.
- *     When each of the functions successfully done, enable event of the destination frame and disable
- *    event of the source frame are fired. You can provide your handler through onenable and ondisable
- *    parameters of a frame, which is returned when calling register.
- *  3. You can open the first frame both by calling trans and show.
- *  4. When you use trans fucntion with some frame already on stack, the top one is replaced
- *    with the specific frame.
- *  5. When you use show function, the frame is placed at the top of other frames.
- *  6. When you use hide function, the top frame is deleted.
- *  7. You can specify where to display a frame by passing x and y arguments.
- *  8. You can pass data from the source element to the destination element when you use trans and show
- *    functions.
- *  9. You can pass your own transient function to all the functions, trans, show and hide. It must
- *    return true when succeded, and return false when failed. When return false, all the changes you
- *    made to the element must be restored.
- * 10. There is some helper functions. See the code below for more information.
  */
 function FrameManager(parent=document.body) {
     var frames = {};
@@ -100,33 +64,8 @@ function FrameManager(parent=document.body) {
     // The element must be a child of the parent specified with constructor. 
     // The position parameter of element must be absolute.
     // z-index of the element must not be modified in enter, exit, resume and suspend.
-    this.register = function (element, tag, enter, exit, resume, suspend) {
-        if (!tag) {
-            throw new Error("tag is required");
-        }
-        if (frames[tag]) {
-            throw new Error("tag is already used");
-        }
-        if (!enter) {
-            enter = toPromise(function (element) {
-                element.style.display = "block"; 
-                return true;
-            });
-        }
-        if (!exit) {
-            exit = toPromise(function (element) {
-                element.style.display = "none";
-                return true;
-            });
-        }
-        if (!resume) {
-            resume = toPromise(function () { return true; });
-        }
-        if (!suspend) {
-            suspend = toPromise(function () { return true; });
-        }
-        frames[tag] = {
-            tag: tag,
+    this.createFrame = function (element, enter, exit, resume, suspend) {
+        const frame = {
             element: element,
             enter: enter,
             exit: exit,
@@ -135,13 +74,66 @@ function FrameManager(parent=document.body) {
 
             onenable: undefined,
             ondisable: undefined,
+
             handlers: {
                 enable: [],
                 disable: [],
             },
+            addEventListener: function(tag, handler) {
+                const handlers = frame.handlers; 
+                if (!handlers[tag]) {
+                    throw new Error("No such event");
+                }
+                handlers[tag].push(handler);
+            },
         };
 
-        return frames[tag];
+        if (!frame.enter) {
+            frame.enter = toPromise(function (element) {
+                element.style.display = "block"; 
+                return element;
+            });
+        }
+        if (!frame.exit) {
+            frame.exit = toPromise(function (element) {
+                element.style.display = "none";
+                return true;
+            });
+        }
+        if (!frame.resume) {
+            frame.resume = toPromise(function (element) { return element; });
+        }
+        if (!frame.suspend) {
+            frame.suspend = toPromise(function () { return true; });
+        }
+
+        return frame;
+    }
+
+    this.register = async function (frame, tag) {
+        if (!frame) {
+            throw new Error("frame is required");
+        }
+        if (!tag) {
+            throw new Error("tag is required");
+        }
+        if (frames[tag]) {
+            throw new Error("tag is already used");
+        }
+        if (!frame) {
+            throw new Error("element must be specified in frame");
+        }
+
+        frame.tag = tag;
+        frames[tag] = frame;
+
+        if (!await frame.exit(frame.element)) {
+            throw new Error("Cannot init frame");
+        }
+
+        updateZIndex(frame, -1);
+        fireEvent(frame, "disable");
+        return true;
     };
 
     this.trans = async function (tag, data, trans, x, y) {
@@ -154,25 +146,28 @@ function FrameManager(parent=document.body) {
         var prev_frame = frame_stack[frame_stack.length-1];
         var current_frame = frames[tag];
 
-        storeElementInfo(current_frame.element);
+        storeFrameInfo(current_frame);
 
-        setElementPosition(current_frame.element, toPx({ x: x, y: y }));
-        current_frame.element.style.zIndex = prev_frame.element.style.zIndex+1;
+        // current_frame.element may not be loaded
+        current_frame.zIndex = prev_frame.zIndex+1;
 
         if (!trans) {
             trans = FrameManager.template.trans.default;
         }
 
         if (!await trans(prev_frame, current_frame, data)) {
-            restoreElementInfo(current_frame.element);
+            restoreFrameInfo(current_frame);
             return false;
         }
+
+        setElementPosition(current_frame.element, toPx({ x: x, y: y }));
 
         // apply changes
         frame_stack.pop();
         frame_stack.push(current_frame);
-        current_frame.element.style.zIndex = prev_frame.element.style.zIndex;
-        prev_frame.element.style.zIndex = -1;
+        // prev_frame.element may be deleted
+        updateZIndex(current_frame, prev_frame.zIndex);
+        updateZIndex(prev_frame, -1);
         fireEvent(current_frame, "enable");
         fireEvent(prev_frame, "disable");
         return true;
@@ -188,22 +183,24 @@ function FrameManager(parent=document.body) {
             prev_frame = frame_stack[frame_stack.length-1];
         }
 
-        storeElementInfo(current_frame.element);
+        storeFrameInfo(current_frame);
 
-        setElementPosition(current_frame.element, toPx({ x: x, y: y }));
-        current_frame.element.style.zIndex = frame_stack.length;
+        current_frame.zIndex = this.getMaxZIndex()+1;
 
         if (!trans) {
             trans = FrameManager.template.show.default; 
         }
 
         if (!await trans(prev_frame, current_frame, data)) {
-            restoreElementInfo(current_frame.element);
+            restoreFrameInfo(current_frame);
             return false;
         }
 
+        setElementPosition(current_frame.element, toPx({ x: x, y: y }));
+
         // apply changes
         frame_stack.push(current_frame);
+        updateZIndex(current_frame, current_frame.zIndex);
         fireEvent(current_frame, "enable");
         fireEvent(prev_frame, "disable");
         return true;
@@ -219,24 +216,34 @@ function FrameManager(parent=document.body) {
             prev_frame = frame_stack[frame_stack.length-2];
         }
 
-        storeElementInfo(current_frame.element);
+        storeFrameInfo(current_frame);
 
         if (!trans) {
             trans = FrameManager.template.hide.default;
         }
 
         if (!await trans(current_frame, prev_frame)) {
-            restoreElementInfo(current_frame.element);
+            restoreFrameInfo(current_frame);
             return false;
         }
 
         // apply changes
         frame_stack.pop();
-        current_frame.element.style.zIndex = -1;
+        updateZIndex(current_frame, -1);
         fireEvent(prev_frame, "enable");
         fireEvent(current_frame, "disable");
         return true;
     };
+
+    function updateZIndex(frame, zIndex) {
+        if (!zIndex && zIndex != 0) {
+            zIndex = frame.zIndex;
+        }
+        if (frame.element) {
+            frame.element.style.zIndex = zIndex;
+        }
+        frame.zIndex = zIndex;
+    }
 
     function fireEvent(frame, tag) {
         if (frame) {
@@ -247,18 +254,6 @@ function FrameManager(parent=document.body) {
         }
     }
 
-    this.addEventListener = function(frame_tag, event_tag, handler) {
-        if (!frames[frame_tag]) {
-            throw new Error("frame is not registered");
-        }
-
-        const handlers = frames[frame_tag].handlers; 
-        if (!handlers[event_tag]) {
-            throw new Error("No such event");
-        }
-        handlers[event_tag].push(handler);
-    };
-
     this.getFrame = function(tag) {
         if (!frames[tag]) {
             throw new Error("frame is not registered");
@@ -268,9 +263,9 @@ function FrameManager(parent=document.body) {
 
     this.getMaxZIndex = function () {
         if (frame_stack.length == 0) {
-            throw new Error("No frame is on stack");
+            return -1;
         }
-        return frame_stack.length - 1;
+        return frame_stack[frame_stack.length-1].zIndex;
     };
 
     this.getTopFrameTag = function () {
@@ -293,17 +288,25 @@ function FrameManager(parent=document.body) {
     };
 
     var tmp_info = {};
-    function storeElementInfo(element) {
-        tmp_info.x = element.style.left;
-        tmp_info.y = element.style.top;
-        tmp_info.display = element.style.display;
-        tmp_info.zIndex = element.style.zIndex;
+    function storeFrameInfo(frame) {
+        if (frame.element) {
+            tmp_info.x = frame.element.style.left;
+            tmp_info.y = frame.element.style.top;
+            tmp_info.display = frame.element.style.display;
+            tmp_info.zIndex = frame.element.style.zIndex;
+        }
+        tmp_info.element = frame.element;
+        tmp_info.frame_zIndex = frame.zIndex;
     }
-    function restoreElementInfo(element) {
-        element.style.left = tmp_info.x;
-        element.style.top = tmp_info.y;
-        element.style.display = tmp_info.display;
-        element.style.zIndex = tmp_info.zIndex;
+    function restoreFrameInfo(frame) {
+        frame.zIndex = tmp_info.frame_zIndex;
+        frame.element = tmp_info.element;
+        if (tmp_info.element) {
+            frame.element.style.left = tmp_info.x;
+            frame.element.style.top = tmp_info.y;
+            frame.element.style.display = tmp_info.display;
+            frame.element.style.zIndex = tmp_info.zIndex;
+        }
     }
 }
 
@@ -322,7 +325,8 @@ FrameManager.template = {
     trans: {
         default:
             async function (prev_frame, current_frame, data) {
-                if (!await current_frame.enter(current_frame.element, data)) {
+                current_frame.element = await current_frame.enter(current_frame.element, data); 
+                if (!current_frame.element) {
                     return false;
                 }   
 
@@ -338,9 +342,10 @@ FrameManager.template = {
     show: {
         default:
             async function (prev_frame, current_frame, data) {
-                if (!await current_frame.enter(current_frame.element, data)) {
+                current_frame.element = await current_frame.enter(current_frame.element, data); 
+                if (!current_frame.element) {
                     return false;
-                }
+                }   
 
                 if (prev_frame) {
                     if (!await prev_frame.suspend(prev_frame.element)) {
@@ -357,7 +362,8 @@ FrameManager.template = {
         default: 
             async function(current_frame, prev_frame) {
                 if (prev_frame) {
-                    if (!await prev_frame.resume(prev_frame.element)) {
+                    prev_frame.element = prev_frame.resume(prev_frame.element);
+                    if (!prev_frame.element) {
                         return false;
                     }
                 }
@@ -463,8 +469,12 @@ FrameManager.trans = {
             const icon = data.icon;
             data = data.data;
             const prev = prev_frame.element;
-            const current = current_frame.element;
+            const current = await current_frame.enter(current_frame.element, data);
 
+            if (!current) {
+                return false;
+            }
+            current.style.zIndex = current_frame.zIndex;
             setElementPosition(current, toPx({ top: getAbsolutePosition(icon).y+icon.offsetHeight }));
             function _touchmove_listener(e) {
                 if (e.touches.length == 1 &&
@@ -505,12 +515,6 @@ FrameManager.trans = {
                 area.addEventListener("touchend", _touchend_listener);
             });
 
-            if (!await current_frame.enter(current, data)) {
-                area.removeEventListener("touchmove", _touchmove_listener);
-                area.removeEventListener("touchend", _touchend_listener);
-                return false;
-            }
-
             if (!await scroll) {
                 await FrameManager.mustNotFailAsync(
                     current_frame.exit(current)
@@ -534,14 +538,14 @@ FrameManager.trans = {
                 manager.trans(next_tag, data, trans, x, y);
             }
         }
-        manager.addEventListener(current_tag, "enable", function (element) {
+        manager.getFrame(current_tag).addEventListener("enable", function (element) {
             const button = element.querySelector(button_selector);
             if (!button) {
                 throw new Error("Cannot find button");
             }
             button.addEventListener("click", _listener);
         });
-        manager.addEventListener(current_tag, "disable", function (element) {
+        manager.getFrame(current_tag).addEventListener("disable", function (element) {
             const button = element.querySelector(button_selector);
             if (!button) {
                 throw new Error("Cannot find button");
