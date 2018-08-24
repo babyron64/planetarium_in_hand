@@ -1,0 +1,78 @@
+.setting {
+    position: absolute;
+    background-color: inherit;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    font-size: 1.5em;
+    padding-top: 1.5em;
+    padding-bottom: 5em;
+    z-index: 1;
+}
+
+.setting h2 {
+    display: block;
+    text-align: center;
+    font-size: 2em;
+    border-bottom: 0.05em;
+    border-bottom-style: solid;
+    border-bottom-color: #c5b4d3;
+    margin-top: 0.5em;
+    margin-bottom: 0em;
+}
+
+.setting h3 {
+    display: block;
+    font-size: 1.5em;
+    padding-left: 1em; 
+    margin-bottom: 0em;
+}
+
+.setting ul {
+    margin-top: 0em;
+    margin-bottom: 0.3em;
+}
+
+.setting ul li {
+    margin-top: 0.3em;
+}
+
+.setting #header {
+    width: 100%;
+    height: 5em;
+}
+
+.setting > #header > img {
+    display: block;
+    height: 5em;
+    opacity: 0.5;
+    margin-left: auto;
+    margin-right: auto;
+    height: 100%;
+    z-index: -1;
+}
+
+.setting > #header > h1 {
+    display: block;
+    position: relative;
+    top: -1.6em;
+    margin-right: auto;
+    margin-left: auto;
+    text-align: center;
+    font-size: 4em;
+}
+
+.setting > .section {
+    margin-left: 0.5em;
+}
+
+.setting > #ok_button {
+    display: block;
+    position: fixed;
+    background-color: #54356d;
+    border: none;
+    margin-bottom: 0px;
+    bottom: 0px;
+    width: 100%;
+    font-size: 4em;
+}

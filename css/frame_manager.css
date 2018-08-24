@@ -1,0 +1,27 @@
+.frame_manager.trans.slide_from_bottom.area {
+    display: block;
+    position: fixed;
+    opacity: 0;
+    border: none;
+    bottom: 0px;
+    padding: 1.5em 1.5em 1em 1.5em;
+    margin-bottom: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 3em;
+}
+
+.frame_manager.trans.slide_from_bottom.area:hover {
+    background-color: #00000030;
+}
+
+.frame_manager.trans.slide_from_bottom.icon {
+    position: relative;
+    top: 0em;
+    display: inline-block;
+    border-width: 0em 0.5em 0.5em 0em;
+    border-color: white;
+    border-style: solid;
+    padding: 1em;
+    transform: rotate(-135deg);
+}
