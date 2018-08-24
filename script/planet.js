@@ -7,8 +7,6 @@ function Planetarium(gl) {
         uniformLocations: {} 
     }
 
-    this.onInit = undefined;
-
     this.changeOrientation = undefined;
     this.changePosition = undefined;
     this.changeTime = undefined;
@@ -23,7 +21,7 @@ function Planetarium(gl) {
     }
 }
 
-async function plInitScreen(pl, configs) {
+async function initScreen(pl, configs) {
     if (!pl.screen) {
         throw new Error("screen menber of planetarium instance is undefined.");
     }
@@ -37,7 +35,6 @@ async function plInitScreen(pl, configs) {
     // { tag(specified in coinfigs): shader(created) }
     const shaders = await loadShaderFiles(gl, configs);
     pl.shaders = shaders;
-    pl.onInit(pl);
 }
 
 function plAttachShaders(pl, tags) {
