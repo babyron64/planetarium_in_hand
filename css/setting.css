@@ -7,6 +7,9 @@
     font-size: 1.5em;
     padding-top: 1.5em;
     padding-bottom: 5em;
+    border-top: 0.1em;
+    border-top-style: solid;
+    border-top-color: #c5b4d3;
     z-index: 1;
 }
 
@@ -62,8 +65,12 @@
     font-size: 4em;
 }
 
-.setting > .section {
+.setting .section {
     margin-left: 0.5em;
+}
+
+.setting .setting_name::after {
+    content: " : ";
 }
 
 .setting > #ok_button {

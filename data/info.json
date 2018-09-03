@@ -1,0 +1,164 @@
+{
+    "planet": {
+        "file": "planet.csv",
+        "source": "https://ssd.jpl.nasa.gov/txt/p_elem_t1.txt",
+        "description": "Keplerian elements and their rates, with respect to the mean ecliptic and equinox of J2000, valid for the time-interval 1800 AD - 2050 AD.",
+        "epoch": "J2000.0",
+        "element": {
+            "name": "name of planet",
+            "a": "semi-major axis",
+            "e": "eccentricity",
+            "I": "inclination",
+            "L": "mean longitude",
+            "long_peri": "longitude of perihelion",
+            "long_node": "longitude of ascending node",
+            "da": "rate of change of a",
+            "de": "rate of change of e",
+            "dI": "rate of change of I",
+            "dL": "rate of change of L",
+            "dlong_peri": "rate of change of long_peri",
+            "dlong_node": "rate of change of long_node"
+        },
+        "unit": {
+            "name": "",
+            "a": "AU",
+            "e": "",
+            "I": "deg",
+            "L": "deg",
+            "long_peri": "deg",
+            "long_node": "deg",
+            "da": "AU/Cy",
+            "de": "/Cy",
+            "dI": "deg/Cy",
+            "dL": "deg/Cy",
+            "dlong_peri": "deg/Cy",
+            "dlong_node": "deg/Cy"
+        },
+        "type": {
+            "name": "string",
+            "a": "number",
+            "e": "number",
+            "I": "number",
+            "L": "number",
+            "long_peri": "number",
+            "long_node": "number",
+            "da": "number",
+            "de": "number",
+            "dI": "number",
+            "dL": "number",
+            "dlong_peri": "number",
+            "dlong_node": "number"
+        }
+    },
+    "planet2": {
+        "file": "planet2.csv",
+        "source": "http://www.met.rdg.ac.uk/~ross/Astronomy/Planets.html",
+        "description": "This table contains mean orbit solutions from a 250 yr. least squares fit of the DE 200 planetary ephemeris to a Keplerian orbit where each element is allowed to vary linearly with time. This solution fits the terrestrial planet orbits to ~25 or better, but achieves only ~600 for Saturn. Elements are referenced to mean ecliptic and equinox of J2000 at the J2000 epoch (2451545.0 JD).",
+        "epoch": "J2000.0",
+        "element": {
+            "name": "name of planet",
+            "a": "semi-major axis",
+            "e": "eccentricity",
+            "I": "inclination",
+            "L": "mean longitude",
+            "long_peri": "longitude of perihelion",
+            "long_node": "longitude of ascending node",
+            "da": "rate of change of a",
+            "de": "rate of change of e",
+            "dI": "rate of change of I",
+            "dL": "rate of change of L",
+            "dlong_peri": "rate of change of long_peri",
+            "dlong_node": "rate of change of long_node"
+        },
+        "unit": {
+            "name": "",
+            "a": "AU",
+            "e": "",
+            "I": "deg",
+            "L": "deg",
+            "long_peri": "deg",
+            "long_node": "deg",
+            "da": "AU/Cy",
+            "de": "/Cy",
+            "dI": "arcsec/Cy",
+            "dL": "arcsec/Cy",
+            "dlong_peri": "arcsec/Cy",
+            "dlong_node": "arcsec/Cy"
+        },
+        "type": {
+            "name": "string",
+            "a": "number",
+            "e": "number",
+            "I": "number",
+            "L": "number",
+            "long_peri": "number",
+            "long_node": "number",
+            "da": "number",
+            "de": "number",
+            "dI": "number",
+            "dL": "number",
+            "dlong_peri": "number",
+            "dlong_node": "number"
+        }
+    },
+    "hip": {
+        "file": "hip_main.csv",
+        "source": "ftp://dbc.nao.ac.jp/DBC/NASAADC/catalogs/1/1239/hip_main.dat.gz",
+        "reference": "https://heasarc.gsfc.nasa.gov/W3Browse/star-catalog/hipparcos.html",
+        "description": "",
+        "epoch": "J1991.25",
+        "element": {
+            "HIP": "hip num",
+            "Vmag": "mag of johnson V",
+            "RAdeg": "right ascension",
+            "DEdeg": "declination",
+            "plx": "pallalex",
+            "pmRA": "proper motion component in the RA direction",
+            "pmDE": "proper motion component in the DE direction",
+            "B_V": "color index (Bmag-Vmag)"
+        },
+        "unit": {
+            "HIP": "",
+            "Vmag": "",
+            "RAdeg": "deg",
+            "DEdeg": "deg",
+            "plx": "parsec",
+            "pmRA": "milliarcsec/yr",
+            "pmDE": "milliarcsec/yr",
+            "B_V": ""
+        },
+        "type": {
+            "HIP": "number",
+            "Vmag": "number",
+            "RAdeg": "number",
+            "DEdeg": "number",
+            "plx": "number",
+            "pmRA": "number",
+            "pmDE": "number",
+            "B_V": "number"
+        }
+    },
+    "CIE": {
+        "file": "ciexyz.csv",
+        "source": "http://www.cvrl.org/database/data/cmfs/ciexyz31.csv",
+        "description": "",
+        "element": {
+            "wavelength": "wavelength",
+            "x": "x",
+            "y": "y",
+            "z": "z"
+        },
+        "unit": {
+            "wavelength": "nm",
+            "x": "",
+            "y": "",
+            "z": ""
+        },
+        "type": {
+            "wavelength": "number",
+            "x": "number",
+            "y": "number",
+            "z": "number"
+        }
+    }
+}

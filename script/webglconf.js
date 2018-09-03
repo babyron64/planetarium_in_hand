@@ -1,25 +1,16 @@
 /*
- * gl is web gl context of a canvas.
- * 
- * fds is of type:
- * [ { tag: string, url: string, type: (gl shader type) } ]
+ * dependency:
+ *     main.js
+ *     utils.js
  */
-async function loadShaderFiles(gl, fds) {
-    // not using await due to performance enhancement
-    const fetches = fds.map(e =>  
-        loadFileText(e.url).then(source =>
-            ({ tag: e.tag, shader: loadShader(gl, e.type, source) })
-        )
-    );
 
-    const pairs = await Promise.all(fetches);
-
-    var shaders = {};
-    pairs.forEach(e => shaders[e.tag] = e.shader);
-    return shaders;
+async function loadShaderFile(gl, url, type) {
+    const source = await loadFileText(url);
+    const shader = createShader(gl, type, source);
+    return shader;
 }
 
-function loadShader(gl, type, source) {
+function createShader(gl, type, source) {
     const shader = gl.createShader(type);
 
     gl.shaderSource(shader, source);
@@ -32,6 +23,29 @@ function loadShader(gl, type, source) {
     }
 
     return shader;
+}
+
+function Render(gl, program, attribs, uniforms) {
+    this.program = program;
+    this.attribLocations = {};
+    this.uniformLocations = {};
+
+    attribs.forEach(a => registerAttrib(gl, this, a));
+    uniforms.forEach(u => registerUniform(gl, this, u));
+}
+
+function createRender(shader_tags) {
+    const gl = app_info.gl.context;
+    const shaders = shader_tags.map(e => app_info.gl.shaders[e]);
+    return new render(attachShaders(gl, shaders));
+}
+
+function registerAttrib(gl, render, name) {
+    render.attribLocations[name] = gl.getAttribLocation(render.program, name);
+}
+
+function registerUniform(gl, render, name) {
+    render.uniformLocations[name] = gl.getUniformLocation(render.program, name);
 }
 
 function attachShaders(gl, shaders) {
@@ -150,4 +164,56 @@ function getUnicolorTexture(gl, color = [0, 0, 255, 255]) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   
     return texture;
+}
+
+function BufferPool() {
+    var elements = [];
+
+    function BufferPoolElement(gl, buffer, target, size, usage) {
+        this.id = gl.canvas.id;
+        this.buffer = buffer;
+        this.target = target;
+        this.size = size;
+        this.usage = usage;
+        this.available = true;
+
+        this.free = function () {
+            this.available = true;
+        }
+    }
+
+    this.get = function (gl, target, size, usage) {
+        var min_size = Infinity;
+        var min_index = -1;
+        const id = gl.canvas.id;
+        for (var i=0;i<elements.length;++i) {
+            const e = elements[i];
+            if (e.id === id &&
+                e.target === target &&
+                e.usage === usage && 
+                e.size >= size &&
+                e.available) {
+                if (e.size < min_size) {
+                    min_size = e.size;
+                    min_index = i;
+                }
+            }
+        }
+        if (min_index !== -1) {
+            const e = elements[min_index];
+            e.available = false;
+            return e;
+        }
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(target, buffer);
+        gl.bufferData(target, size, usage);
+        const e = new BufferPoolElement(gl, buffer, target, size, usage);
+        e.available = false;
+        elements.push(e);
+        return e;
+    };
+}
+
+function sizeofTypedArray(type) {
+    return type.BYTES_PER_ELEMENT;
 }

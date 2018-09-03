@@ -1,3 +1,8 @@
+var data_info;
+async function initUtils() {
+    data_info = await loadFileJSON("/data/info.json");
+}
+
 async function loadFileText(fileurl) {
     const response = await fetch(fileurl);
     return response.text();
@@ -8,6 +13,16 @@ async function loadFileJSON(fileurl) {
     return response.json();
 }
 
+// type is of type:
+// (if header is true)
+//     { header: type_name (string) }
+// (if header is false)
+//     [ type_name (string) ]
+// where type_name may be number or string
+async function loadFileCSV(fileurl, header=true, type={}) {
+    return parseCSV(await loadFileText(fileurl), header, type);
+}
+
 function isURLAbsolute(url) {
     var pat = /^https?:\/\//i;
     if (pat.test(url))
@@ -15,6 +30,46 @@ function isURLAbsolute(url) {
         return true;
     }
     return false;
+}
+
+function parseCSV(text, header=true, type={}){
+    var result = [];
+    var rows = text.split("\n");
+
+    var headers;
+    if (header) {
+        const header_col = rows.shift();
+        headers = header_col.replace(/\s/g,'').split(',');
+    }
+
+    function convertToType(raw, type) {
+        if (!type) {
+            return raw.toString();
+        }
+        if (type === "string") {
+            return raw.toString();
+        } else if (type === "number") {
+            return Number(raw);
+        } else {
+            throw new Error("Unknown type: "+type);
+        }
+    }
+    for(var i=0;i<rows.length;++i){
+        var cols = rows[i].replace(/\s/g,'').split(',');
+        if (header) {
+            result[i] = {};
+            for (var j=0;j<cols.length;++j) {
+                result[i][headers[j]] = convertToType(cols[j], type[headers[j]]);
+            }
+        } else {
+            result[i] = {};
+            for (var j=0;j<cols.length;++j) {
+                result[i][j] = convertToType(cols[j], type[j]);
+            }
+        }
+    }
+
+    return result;
 }
 
 function isCrossOrigin(url) {
@@ -45,6 +100,23 @@ function toPromise(func) {
         const _arguments = arguments;
         return new Promise(resolve => resolve(func(..._arguments)));
     };
+}
+
+function degToRad(deg) {
+    return (deg/180)*Math.PI;
+}
+function radToDeg(rad) {
+    return (rad/Math.PI)*180;
+}
+function normalizeRad(rad) {
+    while (rad < -Math.PI) rad = rad + 2*Math.PI;
+    while (rad > Math.PI) rad = rad - 2*Math.PI;
+    return rad;
+}
+function normalizeDeg(deg) {
+    while (deg < 0) deg = deg + 360;
+    while (deg > 360) deg = deg - 360;
+    return deg;
 }
 
 function toPx(pos) {
@@ -109,6 +181,8 @@ function moveElementPosition(element, diff) {
 function DIContainer() {
     var objects = {};
     var constructors = {};
+    var providers = {};
+    var removers = {};
 
     var last_label = "__last_label__";
     var labeled = {};
@@ -122,10 +196,21 @@ function DIContainer() {
 
     this.addCons = function (cons, tag) {
         this.status = "ok";
-        if (tag in constructors) {
+        if (tag in constructors || tag in providers || tag in objects) {
             this.status = "conflicted";
         }
         constructors[tag] = cons;
+        delete providers[tag];
+        objects[tag] = [];
+    };
+
+    this.addProv = function (prov, tag) {
+        this.status = "ok";
+        if (tag in providers || tag in constructors || tag in objects) {
+            this.status = "conflicted";
+        }
+        providers[tag] = prov;
+        delete constructors[tag];
         objects[tag] = [];
     };
 
@@ -150,11 +235,21 @@ function DIContainer() {
                 objects[tag].push(newComp);
                 return newComp;
             }
+            if (providers[tag]) {
+                var newComp = providers[tag](...args);
+                objects[tag].push(newComp);
+                return newComp;
+            }
             this.status = "error: not found";
             return null;
         } else if (type === "prototype") {
             if (constructors[tag]) {
                 var newComp = new constructors[tag](...args);
+                objects[tag].push(newComp);
+                return newComp;
+            }
+            if (providers[tag]) {
+                var newComp = providers[tag](...args);
                 objects[tag].push(newComp);
                 return newComp;
             }
@@ -180,16 +275,73 @@ function DIContainer() {
         }
 
         if (type === "singleton") {
-            this.status = "conflicted";
+            if (tag in objects) {
+                this.status = "conflicted";
+            }
             objects[tag] = [comp];
         } else if (type === "prototype") {
             objects[tag].push(comp);
         }
     }
 
+    this.clear = function (tag) {
+        this.status = "ok";
+        if (tag in objects) {
+            delete objects[tag];
+        }
+    }
+
     this.getLastComp = function () {
         return last_label[last_label];
     };
+}
+
+function compose(funcs, arg) {
+    for (var i=0;i<funcs.length;++i) {
+        arg = funcs[i](arg);
+    }
+    return arg;
+}
+
+function pipe(funcs) {
+    return compose(funcs, null);
+}
+
+function pa(func) {
+    const args = Array.prototype.slice.call(arguments, 1);
+    return function () {
+        for (var i=0;i<args.length;++i) {
+            if (args[i]) {
+                Array.prototype.splice.call(arguments, i, 0, args[i]);
+            }
+        }
+        return func.apply(null, arguments);
+    };
+}
+
+function notEmpty(value) {
+    return value || value === 0;
+}
+
+async function emptyAsync() {
+    return new Promise(resolve => resolve());
+}
+
+function createPromise() {
+    const obj = {
+        promise: null,
+        resolve: null,
+        reject: null,
+        then: null,
+      	catch: null,
+    };
+    obj.promise = new Promise((resolve, reject) => {
+        obj.resolve = resolve;
+        obj.reject = reject;
+    });
+  	obj.then = obj.promise.then.bind(obj.promise);
+  	obj.catch = obj.promise.catch.bind(obj.promise);	
+    return obj;
 }
 
 //
